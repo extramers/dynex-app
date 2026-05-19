@@ -29,13 +29,16 @@ async function initializeDatabase() {
       our_reference TEXT,
       your_reference TEXT,
       payment_terms TEXT,
+      customer_number TEXT,
+      quote_notes TEXT DEFAULT '',
+      general_notes TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // Migration: Add new columns if they don't exist
-  const tableInfo = await query(`PRAGMA table_info(job_orders)`) as any[];
+  // Turso-anpassad kontroll av kolumner
+  const tableInfo = await query(`SELECT name FROM pragma_table_info('job_orders')`) as any[];
   const columns = tableInfo.map(col => col.name);
   
   if (!columns.includes('invoice_number')) {
@@ -97,14 +100,18 @@ export async function createQuotation(formData: FormData) {
   const optimizationData = formData.get('optimizationData') as string;
   const totalPrice = parseFloat(formData.get('totalPrice') as string) || 0;
 
-  // Generate Customer Number (Kundnr)
+  // Turso-anpassad säker konvertering för max-nummer
   let customerNumber = '1000';
   const maxResult = await query(`SELECT MAX(CAST(customer_number AS INTEGER)) as max_num FROM job_orders WHERE customer_number IS NOT NULL`) as any[];
-  if (maxResult && maxResult.length > 0 && maxResult[0].max_num && maxResult[0].max_num >= 1000) {
-    customerNumber = (maxResult[0].max_num + 1).toString();
+  
+  // Turso skickar ibland tillbaka fält som BigInt eller strängar, så vi gör en säker koll här
+  if (maxResult && maxResult.length > 0 && maxResult[0].max_num !== null) {
+    const currentMax = Number(maxResult[0].max_num);
+    if (currentMax >= 1000) {
+      customerNumber = (currentMax + 1).toString();
+    }
   }
 
-  // Generate Invoice Number
   const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const invoiceNumber = `${currentDate}${customerNumber}`;
 
