@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-orange-dynex: #ff6600;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: #09090b;
+  color: #ffffff;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background-image: url('https://i.postimg.cc/44xRNGxq/bilsd.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  html, body {
+    overflow: hidden !important;
+  }
+  
+  body {
+    background-image: none !important;
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
