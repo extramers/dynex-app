@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { v4 as uuidv4 } from 'uuid';
 import { query, execute } from '../lib/db';
 
@@ -104,7 +105,6 @@ export async function createQuotation(formData: FormData) {
   let customerNumber = '1000';
   const maxResult = await query(`SELECT MAX(CAST(customer_number AS INTEGER)) as max_num FROM job_orders WHERE customer_number IS NOT NULL`) as any[];
   
-  // Turso skickar ibland tillbaka fält som BigInt eller strängar, så vi gör en säker koll här
   if (maxResult && maxResult.length > 0 && maxResult[0].max_num !== null) {
     const currentMax = Number(maxResult[0].max_num);
     if (currentMax >= 1000) {
@@ -141,6 +141,7 @@ export async function createQuotation(formData: FormData) {
     )
   `);
 
+  revalidatePath('/jobbordrar');
   redirect('/jobbordrar');
 }
 
@@ -157,10 +158,12 @@ export async function getJobOrderById(id: string) {
 
 export async function updateJobStatus(id: string, status: string) {
   await execute(`UPDATE job_orders SET status = '${status}', updated_at = CURRENT_TIMESTAMP WHERE id = '${id}'`);
+  revalidatePath('/jobbordrar');
 }
 
 export async function updateJobDescription(id: string, description: string) {
   await execute(`UPDATE job_orders SET job_description = '${description.replace(/'/g, "''")}', updated_at = CURRENT_TIMESTAMP WHERE id = '${id}'`);
+  revalidatePath('/jobbordrar');
 }
 
 export async function updateInvoiceDetails(
@@ -183,6 +186,7 @@ export async function updateInvoiceDetails(
         updated_at = CURRENT_TIMESTAMP 
     WHERE id = '${id}'
   `);
+  revalidatePath('/jobbordrar');
 }
 
 export async function updateOrderList(id: string, column: 'labor_list' | 'parts_list' | 'optimization_list', data: string) {
@@ -192,6 +196,7 @@ export async function updateOrderList(id: string, column: 'labor_list' | 'parts_
         updated_at = CURRENT_TIMESTAMP 
     WHERE id = '${id}'
   `);
+  revalidatePath('/jobbordrar');
 }
 
 export async function updateOrderItems(
@@ -210,6 +215,7 @@ export async function updateOrderItems(
         updated_at = CURRENT_TIMESTAMP 
     WHERE id = '${id}'
   `);
+  revalidatePath('/jobbordrar');
 }
 
 export async function updateNotes(id: string, quoteNotes: string, generalNotes: string) {
@@ -220,6 +226,7 @@ export async function updateNotes(id: string, quoteNotes: string, generalNotes: 
         updated_at = CURRENT_TIMESTAMP 
     WHERE id = '${id}'
   `);
+  revalidatePath('/jobbordrar');
 }
 
 export async function updateCarDetails(
@@ -240,6 +247,7 @@ export async function updateCarDetails(
         updated_at = CURRENT_TIMESTAMP 
     WHERE id = '${id}'
   `);
+  revalidatePath('/jobbordrar');
 }
 
 export async function updateCustomerDetails(
@@ -256,8 +264,10 @@ export async function updateCustomerDetails(
         updated_at = CURRENT_TIMESTAMP 
     WHERE id = '${id}'
   `);
+  revalidatePath('/jobbordrar');
 }
 
 export async function deleteOrder(id: string) {
   await execute(`DELETE FROM job_orders WHERE id = '${id}'`);
+  revalidatePath('/jobbordrar');
 }
